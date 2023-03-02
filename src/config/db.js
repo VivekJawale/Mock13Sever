@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 mongoose.set('strictQuery', false);
 module.exports = connect = async () => {
-    return mongoose.connect(process.env.URL)
+    return await mongoose.connect(
+        `mongodb+srv://vivek:vivek@cluster0.zov7tys.mongodb.net/mock11?retryWrites=true&w=majority`
+    );
 }

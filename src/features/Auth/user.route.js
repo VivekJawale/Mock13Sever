@@ -1,83 +1,55 @@
-const express = require("express");
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
-const app = express.Router();
+const express = require('express');
 const User = require("./user.model");
-const SCECRET_KEY = "12345";
+const app = express.Router();
 
-app.post("/register", async (req, res) => {
-    const { name, email, password, Profilepicture, Phone, bio } = req.body;
+
+app.post("", async (req, res) => {
+    const { name, level, Score } = req.body;
     try {
-        let user = await User.findOne({ email });
-        if (user) {
-            return res.send({
-                status: 0,
-                message: "User already Exists",
-            });
-        } else {
-            let pass = await bcrypt.hash(password, 10);
-            let user = await User.create({
-                ...req.body,
-                password: pass,
-            });
-            return res
-                .status(201)
-                .send({ user, message: "User created Successfully" });
+        if (name) {
+            let user = await User.findOne({ name: name })
+            if (user) {
+                return res.send({
+                    status: 0,
+                    massage: "user already exist",
+                });
+            } else {
+                let newuser = await User.create({ ...req.body })
+                return res.status(201).send({
+                    newuser,
+                    message: "User has been created",
+                });
+            }
         }
     } catch (error) {
         return res.status(404).send(error.message);
     }
-});
+})
 
-
-app.post("/login", async (req, res) => {
-    const { email, password } = req.body;
+app.get("", async (req, res) => {
     try {
-        let user = await User.findOne({ email });
+        let user = await User.find().sort({ Score: -1 })
+        return res.status(200).send(user)
+    } catch (error) {
+        return res.status(404).send(error.message);
+    }
+})
+app.put("/:id", async (req, res) => {
+    const { Score } = req.body;
+    try {
+        let user = await User.findByIdAndUpdate(
+            { _id: req.params.id },
+            { Score: Score }
+        );
         if (user) {
-            let pass = await bcrypt.compare(password, user.password);
-            if (!pass) {
-                return res.send("incorrect password");
-            } else {
-                let token = jwt.sign(
-                    {
-                        _id: user._id,
-                        email: user.email,
-                    },
-                    SCECRET_KEY
-                );
-                return res.send({ token, user, message: "Login Successfully" });
-            }
+            return res.status(200).send({ msg: "score updated" })
         } else {
-            return res.send("Your not registered");
+            return res.status(404).send({ msg: "User does not exist" })
         }
     } catch (error) {
-        return res.send(error.message);
-    }
-});
-
-app.get("/getprofile", async (req, res) => {
-    const _id = req.body._id;
-    const user = await User.find({ _id: _id })
-    if (user) {
-        return res.status(200).send(user);
-    } else {
-        return res.status(404).send('User not found');
+        return res.status(404).send(error.message);
     }
 })
 
-app.patch("/edit", async (req, res) => {
-    const _id = req.body._id;
-    try {
-        const user = await User.findByIdAndUpdate({ _id: _id }, req.body);
-        if (user) {
-            return res.status(200).send(`Updated user profile`);
-        } else {
-            return res.status(404).send(`User profile not found`);
-        }
-    } catch (error) {
-        return res.status(404).send("Unable to edit profile data");
-    }
-})
 
 module.exports = app;

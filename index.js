@@ -1,24 +1,31 @@
+require("dotenv").config();
 const express = require('express');
-const cors = require('cors');
-const PORT = process.env.PORT || 8080;
 const connect = require('./src/config/db');
-const userrouter = require("./src/features/Auth/user.route")
-
+const cors = require("cors");
 const app = express();
-app.use(cors());
-app.use(express.json());
-app.use("", userrouter)
+const UserRouter = require("./src/features/Auth/user.route")
+const WordRouter=require("./src/features/Word/word.route")
+const port = process.env.PORT || 8080;
 
-app.get('/', (req, res) => {
-    res.send("hello world!");
+
+app.use(cors());
+app.use(cors({
+    origin: "*"
+}))
+
+
+
+app.get("", async (req, res) => {
+    return res.send("Hello World")
+})
+app.use("/user", UserRouter)
+app.use("/randomword",WordRouter)
+app.listen(port, async (req, res) => {
+    try {
+        await connect()
+        console.log("Connected  to db")
+    } catch (error) {
+        console.log(error)
+    }
 })
 
-app.listen(PORT, async (req, res) => {
-    try {
-        await connect();
-        console.log(`http://localhost:${PORT}`);
-    } catch (error) {
-        // return  res.send(error)
-        console.log(error.message);
-    }
-});
